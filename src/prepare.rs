@@ -1,4 +1,4 @@
-use crate::{State, StateManager};
+use crate::StateManager;
 use power_controller::Cluster;
 use std::{
     time::Duration,
@@ -18,9 +18,9 @@ pub struct Preparer<'a> {
 impl<'a> Preparer<'a> {
     pub fn new(cluster: &'a Cluster, state_manager: &'a StateManager<'a>, blowing_time: Option<Duration>) -> Preparer<'a>{
         Preparer { 
-            state_manager: state_manager, 
-            cluster: cluster, 
-            blowing_time: blowing_time 
+            state_manager, 
+            cluster, 
+            blowing_time 
         }
     }
     pub fn fiercely_blowing(&self) {
@@ -56,7 +56,7 @@ impl<'a> Preparer<'a> {
                 if max_index < st {
                     max_index = st;
     
-                    for i in ((st + 1)..ed) {
+                    for i in (st + 1)..ed {
                         if rec[i] > rec[max_index] {
                             max_index = i;
                         }
@@ -64,7 +64,7 @@ impl<'a> Preparer<'a> {
                 }
                 if min_index < st {
                     min_index = st;
-                    for i in ((st + 1)..ed) {
+                    for i in (st + 1)..ed {
                         if rec[i] < rec[min_index] {
                             min_index = i;
                         }

@@ -5,7 +5,7 @@ use std::process::{ChildStdout, Command, Stdio};
 use log::info;
 use serde_json::Value;
 
-
+#[derive(PartialEq, Debug)]
 pub struct Action {
     pub hint: String,
     tune_set: Vec<State>
@@ -15,7 +15,6 @@ pub struct Executor<'a> {
     notice_index: usize,
     state_manager: &'a mut StateManager<'a>,
     executable_file: String,
-    result_file:String
 }   
 
 impl From<&Value> for Action {
@@ -44,7 +43,7 @@ impl Action {
 
 
 impl<'a> Executor<'a> {
-    pub fn new<P:'a + AsRef<Path>>(executable_file: P, result_file: P, raw_action_set: &'a Value, state_manager: &'a mut StateManager<'a>) 
+    pub fn new<P:'a + AsRef<Path>>(executable_file: P, raw_action_set: &'a Value, state_manager: &'a mut StateManager<'a>) 
     -> Executor<'a> {
         let arr = raw_action_set.as_array().expect("need to input an action array");
         let notice: Vec<Action> = arr.iter()
@@ -55,8 +54,7 @@ impl<'a> Executor<'a> {
             notice, 
             notice_index: 0, 
             state_manager, 
-            executable_file: executable_file.as_ref().to_str().unwrap().to_string(),
-            result_file: result_file.as_ref().to_str().unwrap().to_string()
+            executable_file: executable_file.as_ref().to_str().unwrap().to_string()
         }
         
     }
@@ -82,10 +80,11 @@ impl<'a> Executor<'a> {
         
         loop {
             match buffer.read_line(&mut s) {
-                Ok(x) => {
+                Ok(_x) => {
                     if self.notice_index < l {
                         if s.contains(self.notice[self.notice_index].hint.as_str()) {
                             self.notice[self.notice_index].act(self.state_manager);
+                            
                             self.notice_index += 1;
                         }
                     }
@@ -97,5 +96,60 @@ impl<'a> Executor<'a> {
                 }
             };
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::time::Duration;
+
+    use super::*;
+    #[test]
+    fn test_action_generation_1() {
+        let raw = r#"
+        {
+            "hint": "POL",
+            "action": [
+                {
+                    "GPU_Freq": 585,
+                    "Time": 5
+                },
+                {
+                    "GPU_Freq": 675,
+                    "Time": 5
+                },
+                {
+                    "GPU_Freq": 765,
+                    "Time":0
+                }
+            ]
+        }
+        "#;
+        let v = serde_json::from_str(raw).unwrap();
+        let a = Action::from(&v);
+        assert_eq!(a, Action {
+            hint: "POL".to_string(),
+            tune_set: vec![
+                State {
+                    gpu_freq: Some(585),
+                    cpu_freq: None,
+                    fan_speed: None,
+                    lasting_time: Some(Duration::from_millis(5)),
+                },
+                State {
+                    gpu_freq: Some(675),
+                    cpu_freq: None,
+                    fan_speed: None,
+                    lasting_time: Some(Duration::from_millis(5))
+                },
+                State {
+                    gpu_freq: Some(765),
+                    cpu_freq: None,
+                    fan_speed: None,
+                    lasting_time: Some(Duration::from_millis(0)),
+                }
+            ]
+        });
+
     }
 }

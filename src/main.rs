@@ -1,4 +1,4 @@
-use std::{path::Path, fs::File, io::BufReader, time::Duration, process::Output};
+use std::{path::Path, fs::File, io::BufReader, time::Duration, process::exit};
 
 use app_lanucher::{StateManager, State, Preparer, Executor};
 use clap::Parser;
@@ -16,22 +16,27 @@ struct Args {
     /// the application file with application name and running strategy
     #[clap(short = 'a', long, value_parser, default_value = "./config-example/hpl.json")]
     application_file: String,
-    /// save the log for application
-    #[clap(short = 'o', long, value_parser, default_value = "./result.log")]
-    log_file: String,
     /// only do preparation
     #[clap(short = 'p', long, value_parser, default_value = "false")]
     only_prepare: bool,
     /// blowing time in milisecond
     #[clap(short = 'b', long, value_parser, default_value = "100")]
-    blowing_time: u64 
+    blowing_time: u64, 
+    #[clap(long = "debug", value_parser, default_value = "false")]
+    show_parser_result: bool,
 }
 
 
-fn print_args(a: &Args) {
+fn print_args_for_debug(a: &Args) {
     println!("blowing_time is {}", a.blowing_time);
-    println!("application file is {}", Path::new(&a.application_file).exists());
-    println!("cluster file is {}", Path::new(&a.cluster_file).exists());
+    println!("application file is: {}, does it exist? {}", &a.application_file, Path::new(&a.application_file).exists());
+    println!("cluster file is: {}, does it exist? {}", &a.application_file, Path::new(&a.cluster_file).exists());
+    let app_info = extract_application(a.application_file.as_str());
+
+    println!("the application to launch is {:?}", app_info["application_path"]);
+    println!("the start state is {:?}", app_info["start_state"]);
+    println!("the strategy is {:?}", app_info["strategy"]);
+
 }
 fn extract_application(file_name: &str) -> Value {
     let file : File = File::open(file_name).unwrap();
@@ -48,10 +53,12 @@ fn do_executation(e: &mut Executor) {
 }
 fn main() {
     let args = Args::parse();
-
+    if args.show_parser_result {
+        print_args_for_debug(&args);
+        exit(1);
+    }
     let cluster = Cluster::from_file(Path::new(&args.cluster_file));
     let app_info = extract_application(args.application_file.as_str());
-
 
     let mut state_manager = StateManager::new(&cluster, State::from(&app_info["start_state"]));
     
@@ -64,9 +71,8 @@ fn main() {
     }
 
     let application_path = app_info["application_path"].as_str().unwrap();
-    let result_path = args.log_file.as_str();
 
-    let mut executor = Executor::new(application_path, result_path, 
+    let mut executor = Executor::new(application_path, 
             &app_info["strategy"], &mut state_manager);
 
     do_executation(&mut executor);

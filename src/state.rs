@@ -1,6 +1,6 @@
 use power_controller::pwrctl::Command;
 use power_controller::Cluster;
-use serde_json::{Value, Map};
+use serde_json::Value;
 use num::*;
 use std::{
     thread::{
@@ -13,7 +13,7 @@ use std::{
 
 const DEFAULT_LASTING_TIME: Duration = Duration::from_millis(1);
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct State {
     pub(super) cpu_freq: Option<usize>,
     pub(super) gpu_freq: Option<usize>,
@@ -187,5 +187,49 @@ impl StateManager<'_> {
         self.set_cpu_freq(cpu_freq);
         self.set_gpu_freq(gpu_freq);
         self.set_fan_speed(fan_speed);
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    // some tests, the interface may can't handle some crushed input, so please don't do that
+    #[test]
+    fn test_complete_state_from_value() {
+        let testv  = r#"
+        {
+            "GPU_Freq": 390,
+            "CPU_Freq": 1000,
+            "Fan_Speed": 40,
+            "Time": 0
+        
+        }
+        "#;
+        let v = serde_json::from_str(testv).unwrap();
+        let s = State::from(&v);
+        assert_eq!(s, State {
+            gpu_freq: Some(390),
+            cpu_freq: Some(1000),
+            fan_speed: Some(40),
+            lasting_time: Some(Duration::from_millis(0))
+        });
+
+    }
+    #[test]
+    fn test_state_from_partial_value() {
+        let testv  = r#"
+        {
+            "GPU_Freq": 765
+        }
+        "#;
+        let v = serde_json::from_str(testv).unwrap();
+        let s = State::from(&v);
+        assert_eq!(s, State {
+            gpu_freq: Some(765),
+            cpu_freq: None,
+            fan_speed: None,
+            lasting_time: None
+        });
+
     }
 }
