@@ -1,0 +1,191 @@
+use power_controller::pwrctl::Command;
+use power_controller::Cluster;
+use serde_json::{Value, Map};
+use num::*;
+use std::{
+    thread::{
+        sleep
+    },
+    time::{
+        Duration
+    }
+};
+
+const DEFAULT_LASTING_TIME: Duration = Duration::from_millis(1);
+
+#[derive(Clone)]
+pub struct State {
+    pub(super) cpu_freq: Option<usize>,
+    pub(super) gpu_freq: Option<usize>,
+    pub(super) fan_speed: Option<usize>,
+    pub(super) lasting_time: Option<Duration>,
+}
+
+pub struct StateManager<'a> {
+    current_state: State,
+    cluster: &'a Cluster
+}
+
+impl From<&Value> for State {
+    fn from(c: &Value) -> Self {
+        let obj = c.as_object().expect("the value in action must be an object");
+        State { 
+            cpu_freq: match obj.get("CPU_Freq") {
+                None => {
+                    None
+                },
+                Some(x) => {
+                    Some(x.as_u64().expect("need a number").to_usize().unwrap())
+                }
+            }, 
+            gpu_freq: match obj.get("GPU_Freq") {
+                None => {
+                    None
+                },
+                Some(x) => {
+                    Some(x.as_u64().expect("need a number").to_usize().unwrap())
+                }
+            }, 
+            fan_speed: 
+            match obj.get("Fan_Speed") {
+                None => {
+                    None
+                },
+                Some(x) => {
+                    Some(x.as_u64().expect("need a number[1-100]").to_usize().unwrap())
+                }
+            }, 
+            lasting_time: 
+            match obj.get("Time") {
+                None => {
+                    None
+                },
+                Some(x) => {
+                    Some(Duration::from_millis(x.as_u64().expect("need a number of milisecond")))
+                }
+            } 
+        }
+    }
+}
+impl State {
+    // maybe there are some places can be empty
+    pub fn new(cpu_freq: Option<usize>, gpu_freq: Option<usize>, fan_speed: Option<usize>, lasting_time: Option<Duration>) -> State {
+        State {
+            cpu_freq: cpu_freq,
+            gpu_freq: gpu_freq,
+            fan_speed: fan_speed,
+            lasting_time: lasting_time
+        }
+    }
+    pub fn all_filled(&self) ->bool {
+        match self.cpu_freq {
+            None => false,
+            Some(_) => {
+                match self.gpu_freq {
+                    None => false,
+                    Some(_) => {
+                        match self.fan_speed {
+                            None => false,
+                            Some(_) => true
+                        } 
+                    }
+                }
+            }
+        }
+    }
+}
+
+impl StateManager<'_> {
+    pub fn new(cluster: &Cluster, state: State) -> StateManager {
+        StateManager { 
+            current_state: state, 
+            cluster,
+        }
+    }
+    pub fn set_cpu_freq(&self, target_freq: usize) {
+        let s = format!("SETFREQ CPU {freq}", freq = target_freq);
+        let command = Command::parse(self.cluster, &s);
+        match command {
+            Ok(c) => {
+                self.cluster.run_command(&c);
+            },
+            Err(msg) => {
+                println!("{}", msg);
+
+            }
+        };
+    } 
+    pub fn set_gpu_freq(&self, target_freq: usize) {
+        let s = format!("SETFREQ GPU {freq}", freq = target_freq);
+        let command = Command::parse(self.cluster, &s);
+        match command {
+            Ok(c) => {
+                self.cluster.run_command(&c);
+            },
+            Err(msg) => {
+                println!("{}", msg);
+
+            }
+        };
+
+    }
+    pub fn set_fan_speed(&self, target_speed: usize) {
+        let s = format!("SETSPEED FAN {speed}", speed = target_speed);
+        let command = Command::parse(self.cluster, &s);
+        match command {
+            Ok(c) => {
+                self.cluster.run_command(&c);
+            },
+            Err(msg) => {
+                println!("{}", msg);
+
+            }
+        };
+    }
+    pub fn switch_state(&mut self, mut target_state: State) {
+
+
+        match target_state.cpu_freq {
+            Some(x) => {
+                self.set_cpu_freq(x);
+                self.current_state.cpu_freq = target_state.cpu_freq.take();
+            },
+            None =>{}
+        };
+
+        match target_state.gpu_freq {
+            Some(x) => {
+                self.set_gpu_freq(x);
+                self.current_state.gpu_freq = target_state.gpu_freq.take();
+            },
+            None => {}
+        };
+
+        match target_state.fan_speed {
+            Some(x) => {
+                self.set_fan_speed(x);
+                self.current_state.fan_speed = target_state.fan_speed.take();
+            },
+            None => {}
+        }
+
+        sleep(match target_state.lasting_time {
+            Some(x) => {
+                x
+            },
+            None => {
+                DEFAULT_LASTING_TIME
+            }
+        });
+
+    }
+
+    pub fn reset(&self) {
+        let cpu_freq = self.current_state.cpu_freq.unwrap();
+        let gpu_freq = self.current_state.gpu_freq.unwrap();
+        let fan_speed = self.current_state.fan_speed.unwrap();
+        self.set_cpu_freq(cpu_freq);
+        self.set_gpu_freq(gpu_freq);
+        self.set_fan_speed(fan_speed);
+    }
+}

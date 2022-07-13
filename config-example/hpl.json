@@ -1,0 +1,28 @@
+{
+    "application_path" : "/home/benchmark/hpl-21.4/run.sh",
+    "start_state": {
+        "GPU_Freq": 390,
+        "CPU_Freq": 1000,
+        "Fan_Speed": 40,
+        "Time": 0
+    },
+    "strategy": [
+        {
+            "hint": "POL",
+            "action": [
+                {
+                    "GPU_Freq": 585,
+                    "Time": 5
+                },
+                {
+                    "GPU_Freq": 675,
+                    "Time": 5
+                },
+                {
+                    "GPU_Freq": 765,
+                    "Time":0
+                }
+            ]
+        }
+    ]
+}

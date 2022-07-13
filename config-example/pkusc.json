@@ -1,0 +1,64 @@
+{
+	"servers": [
+		{
+			"name": "node1",
+			"enabled": true,
+			"host": "localhost",
+			"port": 22,
+			
+			"cpu": {
+				"power_sdr_id": 37
+			},
+			"gpu": {
+				"count": 2
+			},
+			"pdu": {
+				"host": "192.168.1.140",
+				"port": 161,
+				"community": "ENPRackPDU",
+				"pdu_index": 1,
+				"branch_index": 1,
+				"rect_start_index": 7,
+				"rect_end_index": 8
+			},
+			"fan": {
+				"count": 4,
+				"sdr_ids": [41, 43, 45, 47],
+				"full_speed": 13400,
+				"power_sdr_id": 36
+			}
+		},
+		{
+			"name": "node2",
+			"enabled": true,
+			"host": "10.0.0.2",
+			"port": 22,
+
+			"cpu": {
+				"power_sdr_id": 37
+			},
+			"gpu": {
+				"count": 2
+			},
+			"pdu": {
+				"host": "192.168.1.140",
+				"port": 161,
+				"community": "ENPRackPDU",
+				"branch_index": 1,
+				"pdu_index": 1,
+				"rect_start_index": 5,
+				"rect_end_index": 6
+			},
+			"fan": {
+				"count": 4,
+				"sdr_ids": [41, 43, 45, 47],
+				"full_speed": 13400,
+				"power_sdr_id": 36
+			}
+		}
+	],
+
+	"logging": {
+		"interval_ms": 50
+	}
+}
