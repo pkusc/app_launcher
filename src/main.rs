@@ -22,10 +22,14 @@ struct Args {
     #[clap(short = 'p', long, value_parser, default_value = "false")]
     only_prepare: bool,
     /// blowing time in milisecond
-    #[clap(short = 'b', long, value_parser, default_value = "100")]
+    #[clap(short = 'b', long, value_parser, default_value = "10000")]
     blowing_time: u64, 
+    /// set debug level
     #[clap(long = "debug", value_parser, default_value = "false")]
     debug_level: bool,
+    /// only check setting
+    #[clap(long = "sc", value_parser, default_value = "false")]
+    setting_check: bool
 }
 
 
@@ -67,6 +71,10 @@ fn main() {
                 WriteLogger::new(LevelFilter::Trace, Config::default(), File::create("debug.log").unwrap())
             ]
         ).unwrap();
+        
+    }
+
+    if args.setting_check {
         print_args_for_debug(&args);
         exit(1);
     }
@@ -81,7 +89,7 @@ fn main() {
     do_preparation(&preparer);
 
     if args.only_prepare {
-        return;
+        exit(1);
     }
 
     let application_path = app_info["application_path"].as_str().unwrap();
