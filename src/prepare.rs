@@ -72,7 +72,7 @@ impl<'a> Preparer<'a> {
                     }
                 }
                 warn!("the highest power is {}, the lowest is {}, the difference is {}", 
-                    rec[max_index], rec[min_index], rec[max_index] - rec[max_index]);
+                    rec[max_index], rec[min_index], rec[max_index] - rec[min_index]);
                 if rec[max_index] - rec[min_index] <= THRESHOLD {
                     break;
                 }
