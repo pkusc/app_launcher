@@ -1,3 +1,4 @@
+use log::info;
 use power_controller::pwrctl::Command;
 use power_controller::Cluster;
 use serde_json::Value;
@@ -103,6 +104,7 @@ impl StateManager<'_> {
         }
     }
     pub fn set_cpu_freq(&self, target_freq: usize) {
+        info!("[state switch]change cpu frequency to {}MHz",target_freq);
         let s = format!("SETFREQ CPU {freq}", freq = target_freq);
         let command = Command::parse(self.cluster, &s);
         match command {
@@ -116,6 +118,7 @@ impl StateManager<'_> {
         };
     } 
     pub fn set_gpu_freq(&self, target_freq: usize) {
+        info!("[state switch]change gpu frequency to {}MHz",target_freq);
         let s = format!("SETFREQ GPU {freq}", freq = target_freq);
         let command = Command::parse(self.cluster, &s);
         match command {
@@ -130,6 +133,7 @@ impl StateManager<'_> {
 
     }
     pub fn set_fan_speed(&self, target_speed: usize) {
+        info!("[state switch]change fan speed to {}%",target_speed);
         let s = format!("SETSPEED FAN {speed}", speed = target_speed);
         let command = Command::parse(self.cluster, &s);
         match command {

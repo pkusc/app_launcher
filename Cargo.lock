@@ -33,6 +33,7 @@ dependencies = [
  "power_controller",
  "serde",
  "serde_json",
+ "simplelog",
 ]
 
 [[package]]

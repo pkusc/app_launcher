@@ -2,8 +2,10 @@ use std::{path::Path, fs::File, io::BufReader, time::Duration, process::exit};
 
 use app_lanucher::{StateManager, State, Preparer, Executor};
 use clap::Parser;
+use log::{info, LevelFilter};
 use power_controller::Cluster;
 use serde_json::Value;
+use simplelog::*;
 
 /// launcher for specific HPC application
 /// write power adjustment strategy in milisecond grain
@@ -23,19 +25,19 @@ struct Args {
     #[clap(short = 'b', long, value_parser, default_value = "100")]
     blowing_time: u64, 
     #[clap(long = "debug", value_parser, default_value = "false")]
-    show_parser_result: bool,
+    debug_level: bool,
 }
 
 
 fn print_args_for_debug(a: &Args) {
-    println!("blowing_time is {}", a.blowing_time);
-    println!("application file is: {}, does it exist? {}", &a.application_file, Path::new(&a.application_file).exists());
-    println!("cluster file is: {}, does it exist? {}", &a.application_file, Path::new(&a.cluster_file).exists());
+    info!("blowing_time is {}", a.blowing_time);
+    info!("application file is: {}, does it exist? {}", &a.application_file, Path::new(&a.application_file).exists());
+    info!("cluster file is: {}, does it exist? {}", &a.application_file, Path::new(&a.cluster_file).exists());
     let app_info = extract_application(a.application_file.as_str());
 
-    println!("the application to launch is {:?}", app_info["application_path"]);
-    println!("the start state is {:?}", app_info["start_state"]);
-    println!("the strategy is {:?}", app_info["strategy"]);
+    info!("the application to launch is {:?}", app_info["application_path"]);
+    info!("the start state is {:?}", app_info["start_state"]);
+    info!("the strategy is {:?}", app_info["strategy"]);
 
 }
 fn extract_application(file_name: &str) -> Value {
@@ -44,8 +46,12 @@ fn extract_application(file_name: &str) -> Value {
     serde_json::from_reader(reader).unwrap()
 }
 fn do_preparation(p: &Preparer) {
+    info!("preparedness begins");
     p.fiercely_blowing();
+    info!("blowing ends");
     p.wait_for_stability();
+    info!("power is stable");
+    info!("preparedness ends");
 }
 
 fn do_executation(e: &mut Executor) {
@@ -53,7 +59,14 @@ fn do_executation(e: &mut Executor) {
 }
 fn main() {
     let args = Args::parse();
-    if args.show_parser_result {
+    
+    if args.debug_level {
+        CombinedLogger::init(
+            vec![
+                TermLogger::new(LevelFilter::Trace, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
+                WriteLogger::new(LevelFilter::Trace, Config::default(), File::create("debug.log").unwrap())
+            ]
+        ).unwrap();
         print_args_for_debug(&args);
         exit(1);
     }
@@ -63,6 +76,7 @@ fn main() {
     let mut state_manager = StateManager::new(&cluster, State::from(&app_info["start_state"]));
     
     let preparer = Preparer::new(&cluster, &state_manager, Some(Duration::from_millis(args.blowing_time)));
+
 
     do_preparation(&preparer);
 

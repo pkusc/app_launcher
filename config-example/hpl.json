@@ -2,7 +2,7 @@
     "application_path" : "/home/benchmark/hpl-21.4/run.sh",
     "start_state": {
         "GPU_Freq": 390,
-        "CPU_Freq": 1000,
+        "CPU_Freq": 900,
         "Fan_Speed": 40,
         "Time": 0
     },

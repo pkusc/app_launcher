@@ -24,7 +24,7 @@ impl<'a> Preparer<'a> {
         }
     }
     pub fn fiercely_blowing(&self) {
-    
+        
         self.state_manager.set_fan_speed(100);
         sleep(match self.blowing_time {
             Some(x) => {
@@ -41,6 +41,7 @@ impl<'a> Preparer<'a> {
         let (mut min_index, mut max_index)  = (0, 0);
         loop {
             let x = self.cluster.collect_power_data(0).total_power;
+            info!("[waiting stability]the newly read power is {}", x);
             if x > rec[max_index] {
                 max_index = rec.len();
             }
@@ -70,14 +71,15 @@ impl<'a> Preparer<'a> {
                         }
                     }
                 }
-    
+                warn!("the highest power is {}, the lowest is {}, the difference is {}", 
+                    rec[max_index], rec[min_index], rec[max_index] - rec[max_index]);
                 if rec[max_index] - rec[min_index] <= THRESHOLD {
                     break;
                 }
             }
             
         };
-        info!(target: "prepare phase", "the power variation is stable in the threshold {}", THRESHOLD);
+        info!("the power variation is stable in the threshold {}", THRESHOLD);
     } 
 }
 
