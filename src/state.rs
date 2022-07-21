@@ -9,12 +9,16 @@ use std::{
     },
     time::{
         Duration
+    }, 
+    fmt::{
+        self,
+        Display, Debug
     }
 };
 
 const DEFAULT_LASTING_TIME: Duration = Duration::from_millis(1);
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq)]
 pub struct State {
     pub(super) cpu_freq: Option<usize>,
     pub(super) gpu_freq: Option<usize>,
@@ -96,6 +100,81 @@ impl State {
     }
 }
 
+impl Display for State {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let cpu_freq = match self.cpu_freq {
+            Some(x) => {
+                format!("CPU_Freq: {}MHz,",x)
+            },
+            None => {
+                String::new()
+            }
+        };
+        let gpu_freq = match self.gpu_freq {
+            Some(x) => {
+                format!("GPU_Freq: {}MHz,", x)
+            },
+            None => {
+                String::new()
+            }
+        };
+        let fan_speed = match self.fan_speed {
+            Some(x) => {
+                format!("Fan_Speed: {}%,", x)
+            },
+            None => {
+                String::new()
+            }
+        };
+        let lasting_time = match self.lasting_time {
+            Some(x) => {
+                format!("Lasting_time: {:?},", x)
+            },
+            None => {
+                String::new()
+            }
+        };
+        write!(f, "State{{{}{}{}{}}}", cpu_freq, gpu_freq, fan_speed, lasting_time)
+    }
+}
+
+impl Debug for State {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let cpu_freq = match self.cpu_freq {
+            Some(x) => {
+                format!("CPU_Freq: {}MHz,",x)
+            },
+            None => {
+                String::new()
+            }
+        };
+        let gpu_freq = match self.gpu_freq {
+            Some(x) => {
+                format!("GPU_Freq: {}MHz,", x)
+            },
+            None => {
+                String::new()
+            }
+        };
+        let fan_speed = match self.fan_speed {
+            Some(x) => {
+                format!("Fan_Speed: {}%,", x)
+            },
+            None => {
+                String::new()
+            }
+        };
+        let lasting_time = match self.lasting_time {
+            Some(x) => {
+                format!("Lasting_time: {:?},", x)
+            },
+            None => {
+                String::new()
+            }
+        };
+        write!(f, "State{{{}{}{}{}}}", cpu_freq, gpu_freq, fan_speed, lasting_time)
+    }
+}
 impl StateManager<'_> {
     pub fn new(cluster: &Cluster, state: State) -> StateManager {
         StateManager { 
@@ -235,5 +314,17 @@ mod test {
             lasting_time: None
         });
 
+    }
+    #[test]
+    fn test_display() {
+        let testv  = r#"
+        {
+            "GPU_Freq": 765
+        }
+        "#;
+        let v = serde_json::from_str(testv).unwrap();
+        let s = State::from(&v);
+        let res = format!("{}",s);
+        assert_eq!("GPU_Freq: 765MHz,", res);
     }
 }

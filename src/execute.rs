@@ -1,4 +1,5 @@
 use crate::{State, StateManager};
+use std::fmt::{self,Display};
 use std::io::{BufReader, BufRead};
 use std::path::Path;
 use std::process::{ChildStdout, Command, Stdio};
@@ -35,13 +36,20 @@ impl From<&Value> for Action {
 impl Action {
     
     pub fn act(&self, state_manager: &mut StateManager) {
+        info!("[action]{} is acted", &self);
         for s in &self.tune_set {
             state_manager.switch_state(s.clone())
         }
     }
 }
 
+impl Display for Action {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Use `self.number` to refer to each positional data point.
 
+        write!(f, "(hint: {}, action_set: {:?})", self.hint,self.tune_set)
+    }
+}
 impl<'a> Executor<'a> {
     pub fn new<P:'a + AsRef<Path>>(executable_file: P, raw_action_set: &'a Value, state_manager: &'a mut StateManager<'a>) 
     -> Executor<'a> {
@@ -74,7 +82,9 @@ impl<'a> Executor<'a> {
 
     }
     pub fn run(&mut self) {
+        info!("[execution]set buffer");
         let mut buffer = self.get_buffer().unwrap();
+        info!("[execution]executable file is running");
         let mut s = String::new();
         let l = self.notice.len();
         
@@ -83,6 +93,7 @@ impl<'a> Executor<'a> {
                 Ok(_x) => {
                     if self.notice_index < l {
                         if s.contains(self.notice[self.notice_index].hint.as_str()) {
+                            info!("[execution]hint:{} is matched", self.notice[self.notice_index].hint);
                             self.notice[self.notice_index].act(self.state_manager);
                             
                             self.notice_index += 1;
@@ -151,5 +162,33 @@ mod test {
             ]
         });
 
+    }
+
+    #[test]
+    fn test_display() {
+        let raw = r#"
+        {
+            "hint": "POL",
+            "action": [
+                {
+                    "GPU_Freq": 585,
+                    "Time": 5
+                },
+                {
+                    "GPU_Freq": 675,
+                    "Time": 5
+                },
+                {
+                    "GPU_Freq": 765,
+                    "Time":0
+                }
+            ]
+        }
+        "#;
+        let v = serde_json::from_str(raw).unwrap();
+        let a = Action::from(&v);
+        let s = format!("{}",a);
+        assert_eq!("(hint: POL, action_set: [State{GPU_Freq: 585MHz,Lasting_time: 5ms,}, State{GPU_Freq: 675MHz,Lasting_time: 5ms,}, State{GPU_Freq: 765MHz,Lasting_time: 0ns,}])"
+            , s);
     }
 }
