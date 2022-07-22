@@ -68,7 +68,7 @@ impl<'a> Executor<'a> {
     }
     fn get_buffer(&self) -> Result<BufReader<ChildStdout>, std::io::Error>{
         let mut child = match Command::new(&self.executable_file)
-                        .arg("&")
+                        .arg("2>&1")
                         .stdout(Stdio::piped())
                         .spawn()
                         {
