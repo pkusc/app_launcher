@@ -25,7 +25,7 @@ struct Args {
     #[clap(short = 'b', long, value_parser, default_value = "10000")]
     blowing_time: u64, 
     /// set debug level
-    #[clap(long = "debug", value_parser, default_value = "false")]
+    #[clap(long = "debug", value_parser, default_value = "true")]
     debug_level: bool,
     /// only check setting
     #[clap(long = "sc", value_parser, default_value = "false")]
@@ -102,7 +102,7 @@ fn main() {
     let application_path = app_info["application_path"].as_str().unwrap();
 
     let mut executor = Executor::new(application_path, 
-            &app_info["strategy"], &mut state_manager);
+            &app_info["strategy"], &cluster,&mut state_manager);
 
     do_executation(&mut executor);
 }

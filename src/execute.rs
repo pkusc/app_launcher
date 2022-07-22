@@ -4,6 +4,7 @@ use std::io::{BufReader, BufRead};
 use std::path::Path;
 use std::process::{ChildStdout, Command, Stdio};
 use log::info;
+use power_controller::Cluster;
 use serde_json::Value;
 
 #[derive(PartialEq, Debug)]
@@ -12,6 +13,7 @@ pub struct Action {
     tune_set: Vec<State>
 }
 pub struct Executor<'a> {
+    cluster: &'a Cluster,
     notice: Vec<Action>,
     notice_index: usize,
     state_manager: &'a mut StateManager<'a>,
@@ -51,7 +53,7 @@ impl Display for Action {
     }
 }
 impl<'a> Executor<'a> {
-    pub fn new<P:'a + AsRef<Path>>(executable_file: P, raw_action_set: &'a Value, state_manager: &'a mut StateManager<'a>) 
+    pub fn new<P:'a + AsRef<Path>>(executable_file: P, raw_action_set: &'a Value, cluster: &'a Cluster, state_manager: &'a mut StateManager<'a>) 
     -> Executor<'a> {
         let arr = raw_action_set.as_array().expect("need to input an action array");
         let notice: Vec<Action> = arr.iter()
@@ -59,6 +61,7 @@ impl<'a> Executor<'a> {
                         .collect::<_>();
 
         Executor { 
+            cluster,
             notice, 
             notice_index: 0, 
             state_manager, 
@@ -82,6 +85,9 @@ impl<'a> Executor<'a> {
         Ok(BufReader::new(stdout))
 
     }
+    fn get_power(&self) -> usize {
+        self.cluster.collect_power_data(0).total_power
+    }
     pub fn run(&mut self) {
         info!("[execution]set buffer");
         let mut buffer = self.get_buffer().unwrap();
@@ -91,7 +97,10 @@ impl<'a> Executor<'a> {
         
         loop {
             match buffer.read_line(&mut s) {
-                Ok(_x) => {
+                Ok(x) => {
+                    if x == 0 {
+                        break;
+                    }
                     if self.notice_index < l {
                         if s.contains(self.notice[self.notice_index].hint.as_str()) {
                             info!("[execution]hint:{} is matched", self.notice[self.notice_index].hint);
@@ -100,8 +109,8 @@ impl<'a> Executor<'a> {
                             self.notice_index += 1;
                         }
                     }
-                    info!("[running] get a line");
-                    print!("{}",s); 
+                    info!("[running] get a line {}",s);
+                    info!("[power] now the total power is {}", self.get_power());
                 },
                 Err(e) => {
                     print!("{}",e);
@@ -122,7 +131,7 @@ mod test {
     fn test_action_generation_1() {
         let raw = r#"
         {
-            "hint": "POL",
+            "hint": "PCOL",
             "action": [
                 {
                     "GPU_Freq": 585,
