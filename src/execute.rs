@@ -108,6 +108,7 @@ impl<'a> Executor<'a> {
                     break;
                 }
             };
+            s = String::new(); // s must be clear,because new line will append to the original content
         }
     }
 }
