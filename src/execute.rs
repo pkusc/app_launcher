@@ -110,14 +110,14 @@ impl<'a> Executor<'a> {
                         }
                     }
                     info!("[running] get a line {}",s);
-                    info!("[power] now the total power is {}", self.get_power());
+                    //info!("[power] now the total power is {}", self.get_power());
                 },
                 Err(e) => {
                     print!("{}",e);
                     break;
                 }
             };
-            s = String::new(); // s must be clear,because new line will append to the original content
+            s.clear(); // s must be clear,because new line will append to the original content
         }
     }
 }
