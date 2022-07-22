@@ -5,11 +5,13 @@ use std::path::Path;
 use std::process::{ChildStdout, Command, Stdio};
 use log::info;
 use power_controller::Cluster;
+use regex::Regex;
 use serde_json::Value;
 
-#[derive(PartialEq, Debug)]
+
+#[derive(Debug)]
 pub struct Action {
-    pub hint: String,
+    pub hint: Regex,
     tune_set: Vec<State>
 }
 pub struct Executor<'a> {
@@ -25,7 +27,7 @@ impl From<&Value> for Action {
         let obj = raw_data.as_object()
             .expect("can not convert the value to an object in action initialization");
         Action { 
-            hint: obj["hint"].as_str().expect("hint is not a string").to_string(), 
+            hint: Regex::new(obj["hint"].as_str().unwrap()).unwrap(), 
             tune_set: obj["action"]
                         .as_array()
                         .expect("action must be an array of state")
@@ -41,6 +43,12 @@ impl Action {
         info!("[action]{} is acted", &self);
         for s in &self.tune_set {
             state_manager.switch_state(s.clone())
+        }
+    }
+    pub fn find(&self, s: &str) -> bool {
+        match self.hint.find(s) {
+            Some(_x) => true,
+            None => false
         }
     }
 }
@@ -85,6 +93,7 @@ impl<'a> Executor<'a> {
         Ok(BufReader::new(stdout))
 
     }
+    #[allow(unused)]
     fn get_power(&self) -> usize {
         self.cluster.collect_power_data(0).total_power
     }
@@ -102,14 +111,14 @@ impl<'a> Executor<'a> {
                         break;
                     }
                     if self.notice_index < l {
-                        if s.contains(self.notice[self.notice_index].hint.as_str()) {
+                        if self.notice[self.notice_index].find(s.as_str()) {
                             info!("[execution]hint:{} is matched", self.notice[self.notice_index].hint);
                             self.notice[self.notice_index].act(self.state_manager);
                             
                             self.notice_index += 1;
                         }
                     }
-                    info!("[running] get a line {}",s);
+                    info!("[running] get a line\n *{}",s);
                     //info!("[power] now the total power is {}", self.get_power());
                 },
                 Err(e) => {
@@ -124,11 +133,12 @@ impl<'a> Executor<'a> {
 
 #[cfg(test)]
 mod test {
+    #[allow(unused)]
     use std::time::Duration;
 
     use super::*;
     #[test]
-    fn test_action_generation_1() {
+    /*fn test_action_generation_1() {
         let raw = r#"
         {
             "hint": "PCOL",
@@ -174,7 +184,7 @@ mod test {
             ]
         });
 
-    }
+    }*/
 
     #[test]
     fn test_display() {
@@ -202,5 +212,24 @@ mod test {
         let s = format!("{}",a);
         assert_eq!("(hint: POL, action_set: [State{GPU_Freq: 585MHz,Lasting_time: 5ms,}, State{GPU_Freq: 675MHz,Lasting_time: 5ms,}, State{GPU_Freq: 765MHz,Lasting_time: 0ns,}])"
             , s);
+    }
+
+    #[test]
+    fn test_match() {
+        let raw = r#"
+        {
+            "hint": "Prog= 80.\\d{2}%",
+            "action": [
+                {
+                    "GPU_Freq": 810,
+                    "Time": 0
+                }
+            ]
+        }
+        "#;
+        let v = serde_json::from_str(raw).unwrap();
+        let a = Action::from(&v);
+        println!("{:?}",a.hint);
+        assert!(a.find("Prog= 80.22%"));
     }
 }
