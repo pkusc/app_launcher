@@ -29,7 +29,10 @@ struct Args {
     debug_level: bool,
     /// only check setting
     #[clap(long = "sc", value_parser, default_value = "false")]
-    setting_check: bool
+    setting_check: bool,
+    /// skip prepare
+    #[clap(long = "sp", value_parser, default_value = "false")]
+    skip_prepare: bool,
 }
 
 
@@ -85,8 +88,12 @@ fn main() {
     
     let preparer = Preparer::new(&cluster, &state_manager, Some(Duration::from_millis(args.blowing_time)));
 
-
-    do_preparation(&preparer);
+    if !args.skip_prepare {
+        do_preparation(&preparer);
+    }
+    else {
+        state_manager.reset();
+    }
 
     if args.only_prepare {
         exit(1);

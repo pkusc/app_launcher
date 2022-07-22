@@ -8,7 +8,7 @@
     },
     "strategy": [
         {
-            "hint": "POL",
+            "hint": "PCOL",
             "action": [
                 {
                     "GPU_Freq": 585,
