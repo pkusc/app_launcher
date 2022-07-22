@@ -32,6 +32,16 @@
                     "Time": 0
                 }
             ]
+        },
+        {
+            "hint": "Prog= 91.\\d{2}%",
+            "action": [
+                {
+                    "GPU_Freq": 870,
+                    "Fan_Speed": 0,
+                    "Time": 0
+                }
+            ]
         }
     ]
 }
