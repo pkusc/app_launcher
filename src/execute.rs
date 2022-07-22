@@ -68,6 +68,7 @@ impl<'a> Executor<'a> {
     }
     fn get_buffer(&self) -> Result<BufReader<ChildStdout>, std::io::Error>{
         let mut child = match Command::new(&self.executable_file)
+                        .arg("&")
                         .stdout(Stdio::piped())
                         .spawn()
                         {
@@ -99,6 +100,7 @@ impl<'a> Executor<'a> {
                             self.notice_index += 1;
                         }
                     }
+                    info!("[running] get a line");
                     print!("{}",s); 
                 },
                 Err(e) => {
