@@ -33,6 +33,9 @@ struct Args {
     /// skip prepare
     #[clap(long = "sp", value_parser, default_value = "false")]
     skip_prepare: bool,
+    /// only reset every thing
+    #[clap(long = "reset", value_parser, default_value = "false")]
+    only_reset: bool,
 }
 
 
@@ -89,7 +92,9 @@ fn reset_everything(args: &Args) {
 
 fn main_process(args: &Args) {
     
-    
+    if args.only_reset {
+        return ;
+    }
     if args.debug_level {
         CombinedLogger::init(
             vec![
