@@ -1,9 +1,9 @@
-use std::{path::Path, fs::File, io::BufReader, time::Duration, process::exit};
+use std::{path::Path, fs::File, io::BufReader, time::Duration};
 
 use app_lanucher::{StateManager, State, Preparer, Executor};
 use clap::Parser;
 use log::{info, LevelFilter};
-use power_controller::Cluster;
+use power_controller::{Cluster, pwrctl::Command};
 use serde_json::Value;
 use simplelog::*;
 
@@ -64,8 +64,31 @@ fn do_preparation(p: &Preparer) {
 fn do_executation(e: &mut Executor) {
     e.run();
 }
-fn main() {
-    let args = Args::parse();
+
+
+fn reset_everything(args: &Args) {
+    let cluster = Cluster::from_file(Path::new(&args.cluster_file));
+    let s = vec![
+        String::from("RESET FAN"), 
+        String::from("RESET GPU"), 
+        String::from("RESET CPU")
+    ];
+    s.iter().for_each(|c| {
+        let command = Command::parse(&cluster, c);
+        match command {
+            Ok(x) => {
+                cluster.run_command(&x);
+            },
+            Err(e) => {
+                println!("{}", e);
+            }
+        };
+
+    });
+}
+
+fn main_process(args: &Args) {
+    
     
     if args.debug_level {
         CombinedLogger::init(
@@ -79,7 +102,7 @@ fn main() {
 
     if args.setting_check {
         print_args_for_debug(&args);
-        exit(1);
+        return
     }
     let cluster = Cluster::from_file(Path::new(&args.cluster_file));
     let app_info = extract_application(args.application_file.as_str());
@@ -96,7 +119,7 @@ fn main() {
     }
 
     if args.only_prepare {
-        exit(1);
+        return;
     }
 
     let application_path = app_info["application_path"].as_str().unwrap();
@@ -105,4 +128,9 @@ fn main() {
             &app_info["strategy"], &cluster,&mut state_manager);
 
     do_executation(&mut executor);
+}
+fn main() {
+    let args = Args::parse();
+    main_process(&args);
+    reset_everything(&args);
 }
