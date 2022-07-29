@@ -1,0 +1,9 @@
+07:20:18 [INFO] Reset speed of Fan@node1
+07:20:18 [INFO] Reset speed of Fan@node2
+07:20:18 [INFO] Reset freq of GPU@node1.0
+07:20:18 [INFO] Reset freq of GPU@node1.1
+07:20:18 [INFO] Reset freq of GPU@node2.0
+07:20:18 [INFO] Reset freq of GPU@node2.1
+07:20:18 [INFO] Reset freq of CPU@node1
+07:20:18 [INFO] Reset freq of CPU@node2
+07:20:18 [INFO] everything is reset

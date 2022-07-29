@@ -1,6 +1,6 @@
 use std::{path::Path, fs::File, io::BufReader, time::Duration};
 
-use app_lanucher::{StateManager, State, Preparer, Executor};
+use app_launcher::{StateManager, State, Preparer, Executor};
 use clap::Parser;
 use log::{info, LevelFilter};
 use power_controller::{Cluster, pwrctl::Command};
@@ -88,13 +88,12 @@ fn reset_everything(args: &Args) {
         };
 
     });
+    info!("everything is reset");
 }
 
 fn main_process(args: &Args) {
     
-    if args.only_reset {
-        return ;
-    }
+    
     if args.debug_level {
         CombinedLogger::init(
             vec![
@@ -104,7 +103,9 @@ fn main_process(args: &Args) {
         ).unwrap();
         
     }
-
+    if args.only_reset {
+        return;
+    }
     if args.setting_check {
         print_args_for_debug(&args);
         return
