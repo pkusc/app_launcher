@@ -158,7 +158,7 @@ fn main_process(args: &Args) {
     });
     
     let mut executor = Executor::new(application_path, 
-            &app_info["strategy"], &cluster,&mut state_manager);
+            &app_info["strategy"], &cluster, &mut state_manager);
 
     do_executation(&mut executor);
     handle.join().unwrap();
