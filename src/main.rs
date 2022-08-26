@@ -148,18 +148,20 @@ fn main_process(args: &Args) {
         use signal_hook::{self, consts};
         signal_hook::low_level::register(consts::SIGUSR1, read_progress_and_power).unwrap();
     }
-    {
-        let s = args.cluster_file.clone();
-        thread::spawn(move || {
-            let cluster = Cluster::from_file(Path::new(&s));
-            let power_logger = PowerLogger::new(&cluster);
-            power_logger.run_deamon(process::id());
-        });
-    }
+    
+    let s = args.cluster_file.clone();
+    let handle = thread::spawn(move || {
+        info!("run the power_logger");
+        let cluster = Cluster::from_file(Path::new(&s));
+        let power_logger = PowerLogger::new(&cluster);
+        power_logger.run_deamon(process::id());
+    });
+    
     let mut executor = Executor::new(application_path, 
             &app_info["strategy"], &cluster,&mut state_manager);
 
     do_executation(&mut executor);
+    handle.join().unwrap();
 }
 fn main() {
     let args = Args::parse();
