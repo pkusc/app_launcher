@@ -1,14 +1,15 @@
 use log::info;
 use power_controller::Cluster;
+use std::sync::Arc;
 pub static mut POWER :usize = 0;
 
 const THRESHOLD: usize = 1450;
-pub struct PowerLogger<'a> {
-    cluster: &'a Cluster,
+pub struct PowerLogger {
+    cluster: Arc<Cluster>,
 }
 
-impl PowerLogger<'_> {
-    pub fn new<'a>(cluster: &'a Cluster)-> PowerLogger<'a> {
+impl PowerLogger {
+    pub fn new(cluster: Arc<Cluster>)-> PowerLogger {
         PowerLogger { cluster }
     }
     fn get_power(&self) -> usize{

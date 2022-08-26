@@ -12,6 +12,7 @@ use log::{info,warn, LevelFilter};
 use power_controller::{Cluster, pwrctl::Command};
 use serde_json::Value;
 use simplelog::*;
+use std::sync::Arc;
 
 /// launcher for specific HPC application
 /// write power adjustment strategy in milisecond grain
@@ -123,7 +124,7 @@ fn main_process(args: &Args) {
         print_args_for_debug(&args);
         return
     }
-    let cluster = Cluster::from_file(Path::new(&args.cluster_file));
+    let cluster = Arc::new(Cluster::from_file(Path::new(&args.cluster_file)));
     let app_info = extract_application(args.application_file.as_str());
 
     let mut state_manager = StateManager::new(&cluster, State::from(&app_info["start_state"]));
@@ -149,11 +150,10 @@ fn main_process(args: &Args) {
         signal_hook::low_level::register(consts::SIGUSR1, read_progress_and_power).unwrap();
     }
     
-    let s = args.cluster_file.clone();
-    let handle = thread::spawn(move || {
+    let new_arc = Arc::clone(&cluster);
+    let handle = thread::spawn(|| {
         info!("run the power_logger");
-        let cluster = Cluster::from_file(Path::new(&s));
-        let power_logger = PowerLogger::new(&cluster);
+        let power_logger = PowerLogger::new(new_arc);
         power_logger.run_deamon(process::id());
     });
     
