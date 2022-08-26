@@ -13,7 +13,7 @@
 				"count": 2
 			},
 			"pdu": {
-				"host": "192.168.1.140",
+				"host": "172.31.1.140",
 				"port": 161,
 				"community": "ENPRackPDU",
 				"pdu_index": 1,
@@ -41,7 +41,7 @@
 				"count": 2
 			},
 			"pdu": {
-				"host": "192.168.1.140",
+				"host": "172.31.1.140",
 				"port": 161,
 				"community": "ENPRackPDU",
 				"branch_index": 1,

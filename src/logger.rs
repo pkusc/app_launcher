@@ -16,6 +16,7 @@ impl PowerLogger<'_> {
     }
     pub fn run_deamon(&self, parent_id: u32) {
         let power = self.get_power();
+        println!("get the power of {power}");
         unsafe {
             POWER = power;
         }

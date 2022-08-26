@@ -19,17 +19,18 @@
                     "Time": 5
                 },
                 {
-                    "GPU_Freq": 810,
+                    "GPU_Freq": 795,
                     "Time":0
                 }
             ]
         },
         {
-            "hint": "Prog= 80.\\d{2}%",
+            "hint": "===============",
             "action": [
                 {
                     "GPU_Freq": 825,
-                    "Fan_Speed": 1,
+                    "Fan_Speed": 40,
+                    "CPU_Freq": 1100,
                     "Time": 0
                 }
             ]
