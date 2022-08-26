@@ -7,7 +7,9 @@ use log::info;
 use power_controller::Cluster;
 use regex::Regex;
 use serde_json::Value;
+use lazy_static::lazy_static;
 
+pub static mut PROGRESS:f64 = 0.0;
 
 #[derive(Debug)]
 pub struct Action {
@@ -97,6 +99,26 @@ impl<'a> Executor<'a> {
     fn get_power(&self) -> usize {
         self.cluster.collect_power_data(0).total_power
     }
+    fn check_process(s: &str) -> Option<f64>{
+        lazy_static! {
+            static ref RE: Regex = Regex::new(r"Prog= (?P<progress>\d{2,3}.\d{2})%").unwrap();
+        }
+
+        let caps = match RE.captures(s) {
+            None => {
+                return None;
+            }
+            Some(x) => {
+                x
+            }
+        };
+        match caps.name("progress") {
+            Some(x) => {
+                Some(x.as_str().parse().unwrap())
+            },
+            None => None
+        }
+    }
     pub fn run(&mut self) {
         info!("[execution]set buffer");
         let mut buffer = self.get_buffer().unwrap();
@@ -110,6 +132,15 @@ impl<'a> Executor<'a> {
                     if x == 0 {
                         break;
                     }
+                    match Executor::check_process(&s) {
+                        Some(x) => {
+                            println!("now the progress is {:.2}", x);
+                            unsafe {
+                                PROGRESS = x;
+                            }
+                        }
+                        None => {}
+                    };
                     if self.notice_index < l {
                         if self.notice[self.notice_index].find(s.as_str()) {
                             info!("[execution]hint:{} is matched", self.notice[self.notice_index].hint);
@@ -231,5 +262,10 @@ mod test {
         let a = Action::from(&v);
         println!("{:?}",a.hint);
         assert!(a.find("Prog= 80.22%"));
+    }
+    #[test]
+    fn test_get_progress() {
+        Executor::check_process("Prog= 12.22% aaaaa");
+
     }
 }

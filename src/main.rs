@@ -1,8 +1,14 @@
-use std::{path::Path, fs::File, io::BufReader, time::Duration};
+use std::{path::Path, 
+    fs::File, 
+    io::BufReader, 
+    time::Duration, 
+    thread, 
+    process
+};
 
-use app_launcher::{StateManager, State, Preparer, Executor};
+use app_launcher::{StateManager, State, Preparer, Executor, PowerLogger};
 use clap::Parser;
-use log::{info, LevelFilter};
+use log::{info,warn, LevelFilter};
 use power_controller::{Cluster, pwrctl::Command};
 use serde_json::Value;
 use simplelog::*;
@@ -68,6 +74,13 @@ fn do_executation(e: &mut Executor) {
     e.run();
 }
 
+fn read_progress_and_power() {
+    unsafe {
+        warn!("get a power warning!");
+        warn!("the process PROGRESS is {:.2}%", app_launcher::execute::PROGRESS);
+        warn!("the power POWER is {}W", app_launcher::logger::POWER);
+    }
+}
 
 fn reset_everything(args: &Args) {
     let cluster = Cluster::from_file(Path::new(&args.cluster_file));
@@ -129,7 +142,20 @@ fn main_process(args: &Args) {
     }
 
     let application_path = app_info["application_path"].as_str().unwrap();
-
+    
+    
+    unsafe {
+        use signal_hook::{self, consts};
+        signal_hook::low_level::register(consts::SIGUSR1, read_progress_and_power).unwrap();
+    }
+    {
+        let s = args.cluster_file.clone();
+        thread::spawn(move || {
+            let cluster = Cluster::from_file(Path::new(&s));
+            let power_logger = PowerLogger::new(&cluster);
+            power_logger.run_deamon(process::id());
+        });
+    }
     let mut executor = Executor::new(application_path, 
             &app_info["strategy"], &cluster,&mut state_manager);
 
