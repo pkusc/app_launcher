@@ -1,8 +1,12 @@
 use log::info;
 use power_controller::Cluster;
+use std::arch::x86_64::_MM_GET_EXCEPTION_STATE;
+use std::io::Write;
 use std::sync::Arc;
+use std::fs::File;
+use crate::execute::PROGRESS;
 pub static mut POWER :usize = 0;
-
+pub static mut STOP: bool = false;
 const THRESHOLD: usize = 1450;
 pub struct PowerLogger {
     cluster: Arc<Cluster>,
@@ -15,12 +19,20 @@ impl PowerLogger {
     fn get_power(&self) -> usize{
         self.cluster.collect_power_data(0).total_power
     }
-    pub fn run_deamon(&self, parent_id: u32) {
+    pub fn run_deamon(&self, parent_id: u32, output_file: String) {
         info!("the parent_id is {parent_id}");
+        let mut f = File::create(output_file).unwrap();
         loop {
+            unsafe {
+                if STOP {
+                    break;
+                }
+            }
             let power = self.get_power();
             info!("get the power of {power}");
+            
             unsafe {
+                f.write(format!("{PROGRESS}% {power}\n").as_bytes()).unwrap();
                 POWER = power;
             }
             use nix::{
@@ -34,5 +46,9 @@ impl PowerLogger {
             }
         }
     }
-
+    pub fn start_deamon(cluster: Arc<Cluster>, output_file: &str, parent_id: u32){
+        info!("run the power_logger");
+        let power_logger = PowerLogger::new(cluster);
+        power_logger.run_deamon(parent_id, output_file.to_string());
+    }
 }

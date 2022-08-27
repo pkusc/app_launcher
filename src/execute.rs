@@ -137,6 +137,9 @@ impl<'a> Executor<'a> {
                             println!("now the progress is {:.2}", x);
                             unsafe {
                                 PROGRESS = x;
+                                if x >= 100.0 {
+                                    crate::logger::STOP = true;
+                                }
                             }
                         }
                         None => {}

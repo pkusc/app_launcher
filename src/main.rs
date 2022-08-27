@@ -25,6 +25,9 @@ struct Args {
     /// the application file with application name and running strategy
     #[clap(short = 'a', long, value_parser, default_value = "./config-example/hpl.json")]
     application_file: String,
+    /// the file for power logger
+    #[clap(long = "plog",value_parser, default_value = "./power.log")]
+    power_logger_file: String,
     /// only do preparation
     #[clap(short = 'p', long, value_parser, default_value = "false")]
     only_prepare: bool,
@@ -150,18 +153,13 @@ fn main_process(args: &Args) {
         signal_hook::low_level::register(consts::SIGUSR1, read_progress_and_power).unwrap();
     }
     
-    let new_arc = Arc::clone(&cluster);
-    let handle = thread::spawn(|| {
-        info!("run the power_logger");
-        let power_logger = PowerLogger::new(new_arc);
-        power_logger.run_deamon(process::id());
-    });
+    PowerLogger::start_deamon(Arc::clone(&cluster),
+         args.power_logger_file.as_str(), process::id());
     
     let mut executor = Executor::new(application_path, 
             &app_info["strategy"], &cluster, &mut state_manager);
 
     do_executation(&mut executor);
-    handle.join().unwrap();
 }
 fn main() {
     let args = Args::parse();
