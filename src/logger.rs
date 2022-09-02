@@ -8,7 +8,7 @@ use crate::execute::PROGRESS;
 pub static mut POWER :usize = 0;
 pub static mut STOP: bool = false;
 const THRESHOLD: usize = 1450;
-const SAMPLE_FREQ: u64 = 100;
+const SAMPLE_FREQ: u64 = 500;
 pub struct PowerLogger {
     cluster: Arc<Cluster>,
 }

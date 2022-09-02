@@ -1,0 +1,7 @@
+08:26:31 [INFO] blowing_time is 10000
+08:26:31 [INFO] application file is: ./config-example/hpl.json, does it exist? true
+08:26:31 [INFO] cluster file is: ./config-example/hpl.json, does it exist? true
+08:26:31 [INFO] Will the logger start? false
+08:26:31 [INFO] the application to launch is String("/home/benchmark/hpl-21.4/run.sh")
+08:26:31 [INFO] the start state is Object({"CPU_Freq": Number(900), "Fan_Speed": Number(40), "GPU_Freq": Number(390), "Time": Number(0)})
+08:26:31 [INFO] the strategy is Array([Object({"action": Array([Object({"GPU_Freq": Number(585), "Time": Number(5)}), Object({"GPU_Freq": Number(675), "Time": Number(5)}), Object({"GPU_Freq": Number(795), "Time": Number(0)})]), "hint": String("PCOL")}), Object({"action": Array([Object({"CPU_Freq": Number(1100), "Fan_Speed": Number(40), "GPU_Freq": Number(825), "Time": Number(0)})]), "hint": String("===============")})])

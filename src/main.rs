@@ -46,6 +46,9 @@ struct Args {
     /// only reset every thing
     #[clap(long = "reset", value_parser, default_value = "false")]
     only_reset: bool,
+    /// skip logger for debugging
+    #[clap(long = "skip-log", value_parser, default_value = "false")]
+    skip_logger: bool,
 }
 
 
@@ -53,11 +56,14 @@ fn print_args_for_debug(a: &Args) {
     info!("blowing_time is {}", a.blowing_time);
     info!("application file is: {}, does it exist? {}", &a.application_file, Path::new(&a.application_file).exists());
     info!("cluster file is: {}, does it exist? {}", &a.application_file, Path::new(&a.cluster_file).exists());
+    info!("Will the logger start? {}", a.skip_logger);
     let app_info = extract_application(a.application_file.as_str());
 
     info!("the application to launch is {:?}", app_info["application_path"]);
     info!("the start state is {:?}", app_info["start_state"]);
     info!("the strategy is {:?}", app_info["strategy"]);
+
+    
 
 }
 fn extract_application(file_name: &str) -> Value {
@@ -153,9 +159,10 @@ fn main_process(args: &Args) {
         signal_hook::low_level::register(consts::SIGUSR1, read_progress_and_power).unwrap();
     }
     
-    PowerLogger::start_deamon(Arc::clone(&cluster),
+    if args.skip_logger {
+        PowerLogger::start_deamon(Arc::clone(&cluster),
          args.power_logger_file.as_str(), process::id());
-    
+    }
     let mut executor = Executor::new(application_path, 
             &app_info["strategy"], &cluster, &mut state_manager);
 
