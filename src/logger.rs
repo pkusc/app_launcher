@@ -1,13 +1,14 @@
 use log::info;
 use power_controller::Cluster;
-use std::arch::x86_64::_MM_GET_EXCEPTION_STATE;
 use std::io::Write;
 use std::sync::Arc;
 use std::fs::File;
+use std::time::Duration;
 use crate::execute::PROGRESS;
 pub static mut POWER :usize = 0;
 pub static mut STOP: bool = false;
 const THRESHOLD: usize = 1450;
+const SAMPLE_FREQ: u64 = 100;
 pub struct PowerLogger {
     cluster: Arc<Cluster>,
 }
@@ -44,6 +45,9 @@ impl PowerLogger {
                 signal::kill(Pid::from_raw(parent_id as std::os::unix::raw::pid_t)
                     , Signal::SIGUSR1).unwrap();
             }
+            
+
+            std::thread::sleep(Duration::from_millis(SAMPLE_FREQ));
         }
     }
     pub fn start_deamon(cluster: Arc<Cluster>, output_file: &str, parent_id: u32){
