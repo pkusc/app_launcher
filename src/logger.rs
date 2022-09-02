@@ -29,12 +29,17 @@ impl PowerLogger {
                     break;
                 }
             }
-            let power = self.get_power();
-            info!("get the power of {power}");
             
+            let power = self.get_power();
             unsafe {
-                f.write(format!("{PROGRESS}% {power}\n").as_bytes()).unwrap();
-                POWER = power;
+                
+                if PROGRESS > 0.0 {
+                    
+                    info!("get the power of {power}");
+                    f.write(format!("{PROGRESS}% {power}\n").as_bytes()).unwrap();
+                    POWER = power;
+                }
+                
             }
             use nix::{
                 unistd::Pid,

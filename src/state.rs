@@ -213,7 +213,6 @@ impl StateManager<'_> {
     }
     pub fn set_fan_speed(&self, target_speed: usize) {
         info!("[state switch]change fan speed to {}%",target_speed);
-        self.cluster.set_all_fan_manual();
         let s = format!("SETSPEED FAN {speed}", speed = target_speed);
         let command = Command::parse(self.cluster, &s);
         match command {
