@@ -1,4 +1,4 @@
-use log::info;
+use log::{info, warn};
 use power_controller::Cluster;
 use std::io::Write;
 use std::sync::Arc;
@@ -43,14 +43,13 @@ impl PowerLogger {
                 }
                 
             }
-            use nix::{
-                unistd::Pid,
-                sys::signal::{self,Signal}  
-            };
             #[allow(deprecated)]
             if power > THRESHOLD {
-                signal::kill(Pid::from_raw(parent_id as std::os::unix::raw::pid_t)
-                    , Signal::SIGUSR1).unwrap();
+                unsafe {
+                    warn!("get a power warning!");
+                    warn!("the process PROGRESS is {:.2}%", crate::execute::PROGRESS);
+                    warn!("the power POWER is {}W", POWER);
+                }
             }
             
 
