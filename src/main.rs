@@ -159,7 +159,7 @@ fn main_process(args: &Args) {
         signal_hook::low_level::register(consts::SIGUSR1, read_progress_and_power).unwrap();
     }
     
-    if args.skip_logger {
+    if !args.skip_logger {
         PowerLogger::start_deamon(Arc::clone(&cluster),
          args.power_logger_file.as_str(), process::id());
     }

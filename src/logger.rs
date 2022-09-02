@@ -8,7 +8,7 @@ use crate::execute::PROGRESS;
 pub static mut POWER :usize = 0;
 pub static mut STOP: bool = false;
 const THRESHOLD: usize = 1450;
-const SAMPLE_FREQ: u64 = 500;
+
 pub struct PowerLogger {
     cluster: Arc<Cluster>,
 }
@@ -22,6 +22,7 @@ impl PowerLogger {
     }
     pub fn run_deamon(&self, parent_id: u32, output_file: String) {
         info!("the parent_id is {parent_id}");
+        let mut SAMPLE_FREQ = 10000;
         let mut f = File::create(output_file).unwrap();
         loop {
             unsafe {
@@ -36,7 +37,7 @@ impl PowerLogger {
                 
                 if PROGRESS > 0.0 {
                     
-                    
+                    SAMPLE_FREQ = 0;
                     f.write(format!("{PROGRESS}% {power}\n").as_bytes()).unwrap();
                     POWER = power;
                 }
