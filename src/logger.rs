@@ -60,6 +60,9 @@ impl PowerLogger {
     pub fn start_deamon(cluster: Arc<Cluster>, output_file: &str, parent_id: u32){
         info!("run the power_logger");
         let power_logger = PowerLogger::new(cluster);
-        power_logger.run_deamon(parent_id, output_file.to_string());
+        let file_name = output_file.to_string();
+        std::thread::spawn(move|| {
+            power_logger.run_deamon(parent_id, file_name);
+        });
     }
 }
