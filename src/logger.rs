@@ -31,11 +31,12 @@ impl PowerLogger {
             }
             
             let power = self.get_power();
+            info!("get the power of {power}");
             unsafe {
                 
                 if PROGRESS > 0.0 {
                     
-                    info!("get the power of {power}");
+                    
                     f.write(format!("{PROGRESS}% {power}\n").as_bytes()).unwrap();
                     POWER = power;
                 }
